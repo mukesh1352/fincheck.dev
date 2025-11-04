@@ -7,7 +7,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL")?;
     let _db = Database::connect(&database_url).await?;
-    println!("Connected succesfully!!");
+    println!("Connected successfully!!");
     Ok(())
-
 }
