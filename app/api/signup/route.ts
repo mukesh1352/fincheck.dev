@@ -1,9 +1,13 @@
-import { prisma } from "../../../lib/prisma";
-import bcrypt from "bcrypt";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
+
+    if (!username || !password) {
+      return new Response("Missing fields", { status: 400 });
+    }
 
     const exists = await prisma.user.findUnique({
       where: { username },
