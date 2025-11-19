@@ -133,6 +133,59 @@ model User {
   createdAt DateTime @default(now())
 }
 ```
+---
+
+#  Backend Setup (FastAPI + uv)
+
+### 1) Install `uv`
+
+```bash
+pip install uv
+```
+
+### 2) Create a virtual environment
+
+```bash
+cd backend
+uv venv
+```
+
+###  3) Install FastAPI & Uvicorn
+
+```bash
+uv pip install fastapi "uvicorn[standard]"
+```
+
+###  4) Save dependencies
+
+```bash
+uv pip freeze > requirements.txt
+```
+
+###  5) Example `main.py`
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def home():
+    return {"message": "FastAPI is running 🚀"}
+```
+
+### ▶️ Run the server
+
+```bash
+uv run uvicorn main:app --reload
+```
+
+---
+
+###  Tip
+
+You do **not need to activate the venv manually** when using `uv`.
+Just run using `uv run`.
 
 ---
 
@@ -195,7 +248,7 @@ fincheck.dev git:(main) tree
 ├── next-env.d.ts
 ├── next.config.ts
 ├── node_modules
-│  
+│
 ├── package.json
 ├── pnpm-lock.yaml
 ├── postcss.config.mjs
@@ -210,5 +263,5 @@ fincheck.dev git:(main) tree
     └── next-auth.d.ts
 
 36 directories, 28 files
-➜  fincheck.dev git:(main) 
+➜  fincheck.dev git:(main)
 ```

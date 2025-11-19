@@ -1,4 +1,4 @@
-# Install dependencies
+# Install frontend dependencies
 install:
 	pnpm install
 
@@ -18,7 +18,7 @@ start:
 migrate:
 	npx prisma migrate dev
 
-# Format all files
+# Format all frontend files
 format:
 	npx prettier --write .
 
@@ -30,6 +30,29 @@ lint:
 clean:
 	rm -rf node_modules .next
 
-# Clean and reinstall everything
+# Clean and reinstall everything for frontend
 reset: clean
 	pnpm install
+
+# Create backend virtual environment
+backend-venv:
+	cd backend && uv venv
+
+# Install backend dependencies (FastAPI, Uvicorn)
+backend-install:
+	cd backend && uv pip install fastapi "uvicorn[standard]"
+
+# Save backend dependencies to requirements.txt
+backend-freeze:
+	cd backend && uv pip freeze > requirements.txt
+
+# Run FastAPI server
+backend-run:
+	cd backend && uv run uvicorn main:app --reload
+
+# Reset backend: remove venv & recreate
+backend-reset:
+	rm -rf backend/.venv
+	cd backend && uv venv
+	cd backend && uv pip install fastapi "uvicorn[standard]"
+	cd backend && uv pip freeze > requirements.txt
