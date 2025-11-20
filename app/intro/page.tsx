@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import "./globals.css"
+"use client";
 
-const IntroPage = ({ onEnter }: { onEnter: () => void }) => {
+import { useRouter } from "next/navigation";
+
+export default function IntroPage() {
+  const router = useRouter();
+
   return (
     <div className="page-container">
       <div className="content-card">
         <h1 className="main-title">Final Year Project</h1>
+
         <div className="info-section">
           <p className="group-label">Group 73</p>
           <div className="member-list">
@@ -15,12 +19,11 @@ const IntroPage = ({ onEnter }: { onEnter: () => void }) => {
             <p className="member-id">CSE22531</p>
           </div>
         </div>
-        <button className="primary-button" onClick={onEnter}>
+
+        <button className="primary-button" onClick={() => router.push("/sign-in")}>
           Enter
         </button>
       </div>
     </div>
   );
-};
-
-export default IntroPage;
+}
