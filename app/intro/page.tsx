@@ -1,29 +1,12 @@
 "use client";
-
+import IntroCard from "../components/IntroCard";
 import { useRouter } from "next/navigation";
 
 export default function IntroPage() {
   const router = useRouter();
-
   return (
     <div className="page-container">
-      <div className="content-card">
-        <h1 className="main-title">Final Year Project</h1>
-
-        <div className="info-section">
-          <p className="group-label">Group 73</p>
-          <div className="member-list">
-            <p className="member-id">CSE22363</p>
-            <p className="member-id">CSE22505</p>
-            <p className="member-id">CSE22526</p>
-            <p className="member-id">CSE22531</p>
-          </div>
-        </div>
-
-        <button className="primary-button" onClick={() => router.push("/sign-in")}>
-          Enter
-        </button>
-      </div>
+      <IntroCard onEnter={() => router.push("/sign-in")} />
     </div>
   );
 }

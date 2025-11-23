@@ -1,68 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import AuthCard from "@/app/components/AuthCard";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function SignInPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [u, setU] = useState("");
+  const [p, setP] = useState("");
+  const [e, setE] = useState("");
   const router = useRouter();
-
-  const handleSubmit = async () => {
-    setError("");
-
-    if (!username || !password) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    const res = await signIn("credentials", { username, password, redirect: false });
-
-    if (res?.error) {
-      setError("Invalid username or password");
-      return;
-    }
-
-    router.push("/main");
-  };
 
   return (
     <div className="page-container">
-      <button className="back-button" onClick={() => router.push("/intro")}>
+      <button type="button" className="back-button" onClick={() => router.push("/intro")}>
         Back
       </button>
 
-      <div className="auth-card">
-        <h2 className="auth-title">Sign In</h2>
+      <AuthCard>
+        <input className="form-input" placeholder="Username" onChange={(e) => setU(e.target.value)} />
+        <input className="form-input" type="password" placeholder="Password" onChange={(e) => setP(e.target.value)} />
 
-        <div className="auth-form">
-          <input
-            className="form-input"
-            placeholder="Username"
-            onChange={(e) => setUsername(e.target.value)}
-          />
+        {e && <p className="error-message">{e}</p>}
 
-          <input
-            className="form-input"
-            placeholder="Password"
-            type="password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <button
+          type="button"
+          className="primary-button"
+          onClick={async () => {
+            if (!u || !p) return setE("Fill all fields");
+            const res = await signIn("credentials", { username: u, password: p, redirect: false });
+            if (res?.error) return setE("Invalid credentials");
+            router.push("/main");
+          }}
+        >
+          Sign In
+        </button>
 
-          {error && <p className="error-message">{error}</p>}
-
-          <button className="primary-button" onClick={handleSubmit}>Sign In</button>
-        </div>
-
-        <div className="auth-footer">
-          <p className="footer-text">Don't have an account?</p>
-          <button className="link-button" onClick={() => router.push("/sign-up")}>
-            Sign Up
-          </button>
-        </div>
-      </div>
+        <button type="button" className="link-button" onClick={() => router.push("/sign-up")}>
+          Sign Up
+        </button>
+      </AuthCard>
     </div>
   );
 }
