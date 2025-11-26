@@ -18,11 +18,11 @@
 
 ## 3. Image Upload System
 
-- [ ] Build upload UI (Next.js)
-- [ ] Create FastAPI `/upload-image` endpoint
-- [ ] Validate image size & format
-- [ ] Save file to storage
-- [ ] Store upload metadata in database
+<!-- - [ ] Build upload UI (Next.js) -->
+<!-- - [ ] Create FastAPI `/upload-image` endpoint -->
+<!-- - [ ] Validate image size & format -->
+<!-- - [ ] Save file to storage -->
+- [ ] Store upload metadata in database <!- Not required -->
 
 <!-- ## 4. UI Improvements
 - [ ] Polish login page UI
