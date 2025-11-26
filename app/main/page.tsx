@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function MainPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
 
-    if (!selectedFile) {
-      alert("Please select an image ");
-      return;
-    }
+    if (!selectedFile) return alert("Please select an image ⚠️");
 
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -23,45 +22,68 @@ export default function MainPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        alert(`Upload failed ❌: ${data.detail}`);
-        return;
-      }
+      if (!res.ok) return alert(`Upload failed ❌: ${data.detail}`);
 
       alert("Uploaded successfully 🎉");
-      console.log("📌 SERVER RESPONSE:", data);
       setSelectedFile(null);
-    } catch (err) {
-      console.error(err);
-      alert("Server error, try again later ");
+      setPreviewUrl(null);
+    } catch {
+      alert("Server error, try again later ⚠️");
     }
   }
 
+  function handleFileSelect(file: File | null) {
+    setSelectedFile(file);
+    if (file) setPreviewUrl(URL.createObjectURL(file));
+    else setPreviewUrl(null);
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-10 bg-gradient-to-br from-gray-900 to-teal-800 p-10">
-      <h1 className="text-4xl font-black text-white text-center">
-        Bank Document <br /> Submission Portal
-      </h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-teal-900 to-green-800 p-10">
+      <div className="card w-[500px] bg-white/10 backdrop-blur-xl shadow-xl border border-white/20 rounded-3xl p-12 space-y-10 text-center">
+        
+        <h1 className="text-4xl font-extrabold text-white drop-shadow-2xl leading-snug">
+          Bank Document <br /> Submission Portal
+        </h1>
 
-      {/* File Input */}
-      <label className="text-white font-medium flex flex-col gap-3 items-center cursor-pointer">
-        <span className="text-lg">Choose an Image:</span>
-        <input
-          type="file"
-          accept="image/*"
-          className="block w-full text-sm text-white file:border-none file:bg-teal-500 file:cursor-pointer file:text-white file:rounded-lg file:px-4 file:py-2"
-          onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-        />
-      </label>
+        <div className="form-control w-full max-w-sm mx-auto space-y-4">
+          <label htmlFor="upload-file" className="text-white font-semibold text-lg tracking-wide">
+            Upload Image
+          </label>
 
-      {/* Submit Button */}
-      <button
-        type="button"
-        onClick={handleSubmit}
-        className="bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all duration-150"
-      >
-        Submit Image
-      </button>
+          <div className="p-6 border-2 border-dashed border-teal-400 rounded-xl bg-white/10 hover:bg-white/20 transition-all">
+            <input
+              id="upload-file"
+              type="file"
+              accept="image/*"
+              className="file-input file-input-bordered file-input-primary w-full"
+              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+            />
+          </div>
+        </div>
+
+        {/* 🖼 Image Preview Using Next.js Image */}
+        {previewUrl && (
+          <div className="flex justify-center">
+            <div className="relative w-64 h-64 border border-white/20 rounded-xl shadow-lg overflow-hidden">
+              <Image
+                src={previewUrl}
+                alt="Preview"
+                fill
+                className="object-contain bg-black/10"
+              />
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="btn btn-primary w-full rounded-xl font-bold shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 tracking-wide text-lg py-4"
+        >
+          Submit Image
+        </button>
+      </div>
     </div>
   );
 }
