@@ -1,18 +1,7 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import { RateLimiterMemory } from "rate-limiter-flexible";
-
-const ipLimiter = new RateLimiterMemory({
-  points: 20,
-  duration: 60 * 15,
-});
-
-const usernameLimiter = new RateLimiterMemory({
-  points: 5,
-  duration: 60 * 15,
-});
+import clientPromise from "@/lib/mongodb";
+import Credentials from "next-auth/providers/credentials";
+import NextAuth from "next-auth";
 
 const handler = NextAuth({
   session: { strategy: "jwt" },
@@ -20,53 +9,47 @@ const handler = NextAuth({
   providers: [
     Credentials({
       name: "Credentials",
+
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
 
-      async authorize(credentials, req) {
-        // ---- FIXED: Safe header + IP extraction ----
-        const forwarded = req?.headers?.["x-forwarded-for"];
-        const ip =
-          (Array.isArray(forwarded) ? forwarded[0] : forwarded) ||
-          (req as any)?.ip ||
-          "0.0.0.0";
-
-        const username = credentials?.username;
-
-        try {
-          await ipLimiter.consume(ip);
-        } catch {
+      async authorize(credentials) {
+        if (!credentials?.username || !credentials?.password) {
+          console.log("Missing username or password");
           return null;
         }
 
-        try {
-          if (username) await usernameLimiter.consume(username);
-        } catch {
+        const username = credentials.username.trim();
+        const password = credentials.password.trim();
+
+        // === Connect to MongoDB ===
+        const client = await clientPromise;
+        const db = client.db(process.env.MONGODB_DB);
+        const users = db.collection("users");
+
+        // === Find user ===
+        const user = await users.findOne({ username });
+        console.log("DEBUG USER:", user);
+
+        if (!user) {
+          console.log("User not found");
           return null;
         }
 
-        if (!username || !credentials.password) return null;
+        // === Compare password ===
+        const valid = await bcrypt.compare(password, user.password);
+        console.log("DEBUG PASSWORD VALID:", valid);
 
-        const user = await prisma.user.findUnique({
-          where: { username },
-        });
+        if (!valid) {
+          console.log("Password incorrect");
+          return null;
+        }
 
-        if (!user) return null;
-
-        const valid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!valid) return null;
-
-        ipLimiter.delete(ip);
-        usernameLimiter.delete(username);
-
+        // === SUCCESS — return user object ===
         return {
-          id: String(user.id),
+          id: user._id.toString(),
           username: user.username,
         };
       },
