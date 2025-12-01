@@ -6,10 +6,36 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function SignInPage() {
-  const [u, setU] = useState("");
-  const [p, setP] = useState("");
-  const [e, setE] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
+
+  const handleSignIn = async () => {
+    setErrorMsg("");
+
+    if (!username.trim() || !password.trim()) {
+      return setErrorMsg("Fill all fields");
+    }
+
+    setLoading(true);
+
+    const res = await signIn("credentials", {
+      username: username.trim(),
+      password: password.trim(),
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    if (!res || res.error) {
+      return setErrorMsg("Invalid username or password");
+    }
+
+    router.push("/main");
+  };
 
   return (
     <div className="page-container">
@@ -18,25 +44,37 @@ export default function SignInPage() {
       </button>
 
       <AuthCard>
-        <input className="form-input" placeholder="Username" onChange={(e) => setU(e.target.value)} />
-        <input className="form-input" type="password" placeholder="Password" onChange={(e) => setP(e.target.value)} />
+        <input
+          className="form-input"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
-        {e && <p className="error-message">{e}</p>}
+        <input
+          className="form-input"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        {errorMsg && <p className="error-message">{errorMsg}</p>}
 
         <button
           type="button"
           className="primary-button"
-          onClick={async () => {
-            if (!u || !p) return setE("Fill all fields");
-            const res = await signIn("credentials", { username: u, password: p, redirect: false });
-            if (res?.error) return setE("Invalid credentials");
-            router.push("/main");
-          }}
+          onClick={handleSignIn}
+          disabled={loading}
         >
-          Sign In
+          {loading ? "Signing In..." : "Sign In"}
         </button>
 
-        <button type="button" className="link-button" onClick={() => router.push("/sign-up")}>
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => router.push("/sign-up")}
+        >
           Sign Up
         </button>
       </AuthCard>

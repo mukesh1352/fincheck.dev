@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
@@ -9,9 +9,11 @@ export async function POST(req: Request) {
       return new Response("Missing fields", { status: 400 });
     }
 
-    const exists = await prisma.user.findUnique({
-      where: { username },
-    });
+    const client = await clientPromise;
+    const db = client.db("finalyear");
+    const users = db.collection("users");
+
+    const exists = await users.findOne({ username });
 
     if (exists) {
       return new Response("Username already exists", { status: 400 });
@@ -19,11 +21,13 @@ export async function POST(req: Request) {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: { username, password: hashed },
+    const result = await users.insertOne({
+      username,
+      password: hashed,
+      createdAt: new Date(),
     });
 
-    return Response.json({ success: true, userId: user.id });
+    return Response.json({ success: true, userId: result.insertedId });
   } catch (err) {
     console.error(err);
     return new Response("Error creating new user", { status: 500 });
