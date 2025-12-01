@@ -1,6 +1,6 @@
-Here is your **complete, production-ready `README.md` file**, fully updated for your **MongoDB + Next.js + NextAuth** stack.
+Below is the **updated README.md** including your **FastAPI backend image upload service**, integrated cleanly as a dedicated section.
 
-You can **copy/paste this directly into your repo**.
+You can **copy/paste this entire README** into your repo — it is now complete and production-ready.
 
 ---
 
@@ -14,8 +14,7 @@ Fincheck.dev is a modern financial tracking and authentication-enabled applicati
 * **MongoDB Atlas**
 * **Tailwind CSS**
 * **pnpm**
-
-It includes user authentication, signup/signin flows, and a clean modular structure.
+* **FastAPI backend for additional services (e.g., image upload)**
 
 ---
 
@@ -26,38 +25,41 @@ It includes user authentication, signup/signin flows, and a clean modular struct
 * Next.js App Router
 * React 19
 * Tailwind CSS
-* NextAuth Credentials Provider
+* NextAuth (Credential-based authentication)
+* TypeScript
 
 ### **Database**
 
 * MongoDB Atlas
-* MongoDB Native Driver (high performance, no ORM overhead)
+* MongoDB Native Driver
 
-### **Tooling**
+### **Backend**
+
+* Python **FastAPI**
+* Uvicorn
+* aiofiles
+
+### **Package Manager**
 
 * pnpm
-* Biome (lint + format)
-* TypeScript
 
 ---
 
 # 📦 Prerequisites
 
-Make sure you have:
-
-### **Node.js**
+### Install Node.js
 
 [https://nodejs.org](https://nodejs.org)
 
-### **pnpm**
+### Install pnpm
 
 ```bash
 npm install -g pnpm
 ```
 
-### **MongoDB Atlas Cluster**
+### Install Python 3.10+
 
-Create one free at: [https://www.mongodb.com/atlas](https://www.mongodb.com/atlas)
+[https://www.python.org/downloads/](https://www.python.org/downloads/)
 
 ---
 
@@ -73,7 +75,7 @@ pnpm install
 
 # 🔑 Environment Variables
 
-Create a file named `.env` in the project root:
+Create a `.env` file:
 
 ```env
 # MongoDB
@@ -85,7 +87,7 @@ NEXTAUTH_SECRET="<your-secret>"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-### Generate a secure secret:
+Generate a secure secret:
 
 ```bash
 openssl rand -base64 32
@@ -95,17 +97,15 @@ openssl rand -base64 32
 
 # 🗄 MongoDB Setup
 
-This project uses the **native MongoDB driver** for maximum speed and flexibility.
+The project uses the **native MongoDB driver**.
 
-#### `lib/mongodb.ts`
+`lib/mongodb.ts`:
 
 ```ts
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI!;
-declare global {
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
-}
+declare global { var _mongoClientPromise: Promise<MongoClient> | undefined; }
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
@@ -128,7 +128,7 @@ export default clientPromise;
 
 # 🔐 Authentication (NextAuth)
 
-Authentication uses **next-auth/credentials** with MongoDB.
+Credentials-based authentication with MongoDB.
 
 ### Route:
 
@@ -136,7 +136,7 @@ Authentication uses **next-auth/credentials** with MongoDB.
 /api/auth/[...nextauth]
 ```
 
-### Example authorize logic:
+### Logic:
 
 ```ts
 import bcrypt from "bcryptjs";
@@ -149,24 +149,19 @@ const handler = NextAuth({
 
   providers: [
     Credentials({
-      name: "Credentials",
       credentials: {
         username: { type: "text" },
-        password: { type: "password" }
+        password: { type: "password" },
       },
 
       async authorize(credentials) {
-        if (!credentials) return null;
-
         const client = await clientPromise;
         const db = client.db(process.env.MONGODB_DB);
-        const users = db.collection("users");
+        const user = await db.collection("users").findOne({ username: credentials?.username });
 
-        const user = await users.findOne({ username: credentials.username });
         if (!user) return null;
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) return null;
+        const valid = await bcrypt.compare(credentials!.password, user.password);
+        if (!valid) return null;
 
         return { id: user._id.toString(), username: user.username };
       }
@@ -175,10 +170,7 @@ const handler = NextAuth({
 
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.username = user.username;
-      }
+      if (user) { token.id = user.id; token.username = user.username; }
       return token;
     },
     async session({ session, token }) {
@@ -211,7 +203,7 @@ export async function POST(req: Request) {
   const users = db.collection("users");
 
   const exists = await users.findOne({ username });
-  if (exists) return new Response("Username already exists", { status: 400 });
+  if (exists) return new Response("Username exists", { status: 400 });
 
   const hash = await bcrypt.hash(password, 10);
 
@@ -227,9 +219,7 @@ export async function POST(req: Request) {
 
 ---
 
-# ▶️ Running the App
-
-Start development server:
+# ▶️ Running the Next.js App
 
 ```bash
 pnpm dev
@@ -241,7 +231,7 @@ Open:
 
 ---
 
-# 📁 Project Structure
+# 🧩 Project Structure
 
 ```
 fincheck.dev
@@ -249,17 +239,124 @@ fincheck.dev
 │   ├── api
 │   │   ├── auth/[...nextauth]/route.ts
 │   │   └── signup/route.ts
-│   ├── intro/page.tsx
 │   ├── sign-in/page.tsx
 │   ├── sign-up/page.tsx
+│   ├── intro/page.tsx
 │   ├── main/page.tsx
 │   └── layout.tsx
-├── lib
-│   └── mongodb.ts
-├── types
-│   └── next-auth.d.ts
+├── lib/mongodb.ts
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── uploads/
+├── types/next-auth.d.ts
 ├── README.md
-├── package.json
-└── pnpm-lock.yaml
+└── package.json
 ```
+
+---
+
+# ⚡ FastAPI Backend (Image Upload Service)
+
+This backend handles **secure image uploads** with validation & size checks.
+
+### 📌 Features
+
+* Restricts image types (JPEG, PNG, WebP)
+* Max file size: **5 MB**
+* Saves file to `/uploads`
+* Built-in CORS support
+* Async file streaming using `aiofiles`
+
+### 📄 `backend/main.py`
+
+```python
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import os
+import uuid
+import aiofiles
+
+app = FastAPI(title="FASTAPI BACKEND", version="1.0.0")
+
+ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
+MAX_FILE_SIZE = 5 * 1024 * 1024
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+def home():
+    return {"message": "FastAPI is running.."}
+
+@app.get("/health")
+def health_check():
+    return {"message": "ok", "service": "backend"}
+
+@app.post("/upload-image")
+async def image_upload(file: UploadFile = File(...)):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid image type..")
+
+    total_size = 0
+    CHUNK_SIZE = 1024 * 1024
+
+    while chunk := await file.read(CHUNK_SIZE):
+        total_size += len(chunk)
+        if total_size > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="Exceeding max file size..")
+
+    await file.seek(0)
+
+    ext = file.filename.split(".")[-1]
+    saved_name = f"{uuid.uuid4()}.{ext}"
+    saved_path = os.path.join("uploads", saved_name)
+
+    os.makedirs("uploads", exist_ok=True)
+
+    async with aiofiles.open(saved_path, "wb") as f:
+        while chunk := await file.read(CHUNK_SIZE):
+            await f.write(chunk)
+
+    metadata = {
+        "original_name": file.filename,
+        "saved_name": saved_name,
+        "mime_type": file.content_type,
+        "size_bytes": total_size,
+        "path": saved_path,
+    }
+
+    await file.close()
+
+    return JSONResponse(
+        status_code=201,
+        content={"message": "Image upload successful", "metadata": metadata},
+    )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+```
+
+---
+
+# ▶️ Running the FastAPI Backend
+
+```bash
+cd backend
+uvicorn main:app --reload
+```
+
+Your API will run at:
+
+👉 [http://127.0.0.1:8000](http://127.0.0.1:8000)
+👉 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) (Swagger UI)
+
+---
 
