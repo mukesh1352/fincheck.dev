@@ -1,7 +1,3 @@
-Below is the **updated README.md** including your **FastAPI backend image upload service**, integrated cleanly as a dedicated section.
-
-You can **copy/paste this entire README** into your repo — it is now complete and production-ready.
-
 ---
 
 # 📘 **Fincheck.dev**
