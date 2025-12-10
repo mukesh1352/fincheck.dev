@@ -12,6 +12,9 @@ from msgqueue.model_registry import get_model
 from benchmarking.metrics_manager import collect_all_metrics
 from benchmarking.store_metrics import store_metrics
 
+from benchmarking.prediction_quality import get_prediction_quality
+
+
 # Base paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
@@ -78,6 +81,9 @@ def callback(ch, method, properties, body):
         metrics["error"] = "file_not_found"
         metrics["filepath"] = filepath
 
+        # Prediction quality cannot be computed → set null
+        metrics["prediction_quality"] = None
+
         store_metrics(job_id, metrics)
         ch.basic_ack(delivery_tag=method.delivery_tag)
         return
@@ -89,13 +95,18 @@ def callback(ch, method, properties, body):
         model = get_model(DEFAULT_MODEL, DEVICE)
         prediction, probabilities, tensor = run_inference(filepath, model)
 
-        # Now collect only Mukesh’s system metrics
+        # Collect Mukesh’s system metrics (and others in future)
         metrics = collect_all_metrics(
             job_id=job_id,
             model=model,
             tensor=tensor,
             probabilities=probabilities
         )
+
+        # ---------------------------------------------------
+        # ADD RATHNA’S PREDICTION QUALITY METRICS
+        # ---------------------------------------------------
+        metrics["prediction_quality"] = get_prediction_quality(probabilities)
 
         store_metrics(job_id, metrics)
 
@@ -107,6 +118,12 @@ def callback(ch, method, properties, body):
         metrics = collect_all_metrics(job_id)
         metrics["error"] = str(e)
         metrics["filepath"] = filepath
+
+        # Attempt prediction-quality extraction
+        try:
+            metrics["prediction_quality"] = get_prediction_quality(probabilities)
+        except:
+            metrics["prediction_quality"] = None
 
         store_metrics(job_id, metrics)
 
