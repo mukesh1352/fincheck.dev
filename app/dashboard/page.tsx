@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import CpuChart from "@/app/components/metrics/CpuChart";
-import GpuChart from "@/app/components/metrics/GpuChart";
-import GpuVramChart from "@/app/components/metrics/GpuVramChart";
-import RamChart from "@/app/components/metrics/RamChart";
-import LatencyLive from "@/app/components/metrics/LatencyLive";
+import CpuChart from "../components/charts/CpuChart";
+import GpuChart from "../components/charts/GpuChart";
+import GpuVramChart from "../components/charts/GpuVramChart";
+import RamChart from "../components/charts/RamChart";
+import LatencyLive from "../components/charts/LatencyLive";
 
 export default function DashboardPage() {
   return (

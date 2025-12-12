@@ -1,5 +1,5 @@
 "use client";
-import IntroCard from "../components/IntroCard";
+import IntroCard from "../components/ui/IntroCard";
 import { useRouter } from "next/navigation";
 
 export default function IntroPage() {

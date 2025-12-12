@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/mongodb";
+import { getMongo } from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
@@ -9,12 +9,11 @@ export async function POST(req: Request) {
       return new Response("Missing fields", { status: 400 });
     }
 
-    const client = await clientPromise;
-    const db = client.db("finalyear");
+    // Use the new getMongo() method
+    const db = await getMongo();
     const users = db.collection("users");
 
     const exists = await users.findOne({ username });
-
     if (exists) {
       return new Response("Username already exists", { status: 400 });
     }
@@ -27,9 +26,12 @@ export async function POST(req: Request) {
       createdAt: new Date(),
     });
 
-    return Response.json({ success: true, userId: result.insertedId });
+    return Response.json({
+      success: true,
+      userId: result.insertedId,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Signup error:", err);
     return new Response("Error creating new user", { status: 500 });
   }
 }
