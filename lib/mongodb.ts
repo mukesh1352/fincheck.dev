@@ -1,29 +1,36 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Db } from "mongodb";
 
-const uri = process.env.MONGODB_URI!;
-const options = {};
+// Read env variable from Next.js runtime
+const rawUri = process.env.MONGODB_URI;
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-
-declare global {
-  // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+// Runtime validation
+if (!rawUri) {
+  throw new Error("❌ Missing environment variable: MONGODB_URI");
 }
 
-if (!uri) {
-  throw new Error("Please add MONGODB_URI to your .env file");
-}
+// Tell TypeScript it is now definitely a string
+const uri: string = rawUri;
 
-if (process.env.NODE_ENV === "development") {
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+const dbName: string = process.env.MONGODB_DB ?? "finalyear";
+
+// Cached client & db
+let cachedClient: MongoClient | null = null;
+let cachedDb: Db | null = null;
+
+export async function getMongo(): Promise<Db> {
+  // If DB already exists, reuse it
+  if (cachedDb) return cachedDb;
+
+  // Create client if needed
+  if (!cachedClient) {
+    cachedClient = new MongoClient(uri);
   }
-  clientPromise = global._mongoClientPromise;
-} else {
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect();
-}
 
-export default clientPromise;
+  // Connect — safe to call multiple times in MongoDB v5+
+  await cachedClient.connect();
+
+  // Select DB
+  cachedDb = cachedClient.db(dbName);
+
+  return cachedDb;
+}

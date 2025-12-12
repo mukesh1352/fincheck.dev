@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
-import clientPromise from "@/lib/mongodb";
-import Credentials from "next-auth/providers/credentials";
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { getMongo } from "@/lib/mongodb";
 
 const handler = NextAuth({
   session: { strategy: "jwt" },
@@ -25,8 +25,7 @@ const handler = NextAuth({
         const password = credentials.password.trim();
 
         // === Connect to MongoDB ===
-        const client = await clientPromise;
-        const db = client.db(process.env.MONGODB_DB);
+        const db = await getMongo();
         const users = db.collection("users");
 
         // === Find user ===
@@ -34,7 +33,7 @@ const handler = NextAuth({
         console.log("DEBUG USER:", user);
 
         if (!user) {
-          console.log("User not found");
+          console.log("❌ User not found");
           return null;
         }
 
@@ -43,11 +42,11 @@ const handler = NextAuth({
         console.log("DEBUG PASSWORD VALID:", valid);
 
         if (!valid) {
-          console.log("Password incorrect");
+          console.log("❌ Invalid password");
           return null;
         }
 
-        // === SUCCESS — return user object ===
+        // === SUCCESS ===
         return {
           id: user._id.toString(),
           username: user.username,
@@ -68,8 +67,8 @@ const handler = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user = {
-          id: token.id,
-          username: token.username,
+          id: token.id as string,
+          username: token.username as string,
         };
       }
       return session;
