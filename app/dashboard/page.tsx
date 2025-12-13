@@ -6,46 +6,80 @@ import GpuChart from "../components/charts/GpuChart";
 import GpuVramChart from "../components/charts/GpuVramChart";
 import RamChart from "../components/charts/RamChart";
 import LatencyLive from "../components/charts/LatencyLive";
+import CpuRamBarUsage from "../components/charts/CPURAMUSAGE";
+import ENTROPYCONFIDENCESCORE from "../components/charts/ENTROPYCONFIDENCESCORE";
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white p-6">
+    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white px-6 pb-12">
 
       {/* Header */}
-      <header className="sticky top-0 bg-slate-900/80 backdrop-blur-md z-20 py-4 px-2 mb-6 border-b border-slate-700">
+      <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-slate-700 py-6 mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight text-center">
           Real-Time Metrics Dashboard
         </h1>
-        <p className="text-center text-slate-400 mt-1 text-sm">
+        <p className="text-center text-slate-400 mt-2 text-sm">
           Live system performance & model inference analytics
         </p>
       </header>
 
-      {/* Grid Container */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Main Grid */}
+      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-        {/* Row 1 */}
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
-          <CpuChart />
-        </div>
+        {/* ===================== */}
+        {/* SYSTEM PERFORMANCE */}
+        {/* ===================== */}
 
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
-          <GpuChart />
-        </div>
+        <section className="space-y-10">
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <CpuChart />
+          </div>
 
-        {/* Row 2 */}
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
-          <GpuVramChart />
-        </div>
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <RamChart />
+          </div>
+        </section>
 
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
-          <RamChart />
-        </div>
+        <section className="space-y-10">
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <GpuChart />
+          </div>
 
-        {/* Full-width Footer Chart */}
-        <div className="lg:col-span-2 rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
-          <LatencyLive />
-        </div>
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <GpuVramChart />
+          </div>
+        </section>
+
+        {/* ===================== */}
+        {/* RESOURCE CORRELATION */}
+        {/* ===================== */}
+
+        <section className="lg:col-span-2">
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <CpuRamBarUsage />
+          </div>
+        </section>
+
+        {/* ===================== */}
+        {/* MODEL QUALITY */}
+        {/* ===================== */}
+
+        <section className="lg:col-span-2">
+          <div className="rounded-2xl bg-slate-800/60 p-8 border border-slate-700 shadow-lg">
+            <ENTROPYCONFIDENCESCORE />
+          </div>
+        </section>
+
+        {/* ===================== */}
+        {/* LATENCY FOOTER */}
+        {/* ===================== */}
+
+        <section className="lg:col-span-2">
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <LatencyLive />
+          </div>
+        </section>
+
       </div>
     </main>
   );
