@@ -8,7 +8,7 @@ from backend.benchmarking.prediction_quality import get_prediction_quality
 __all__ = ["collect_all_metrics"]
 
 
-def collect_all_metrics(job_id, model=None, tensor=None, probabilities=None):
+def collect_all_metrics(job_id, model=None, tensor=None, probabilities=None, device="cpu"):
     """
     Unified metrics aggregator across all team members.
     """
@@ -21,7 +21,7 @@ def collect_all_metrics(job_id, model=None, tensor=None, probabilities=None):
 
         # Vikas – Inference Metrics
         "inference_metrics": (
-            get_inference_metrics(model, tensor)
+            get_inference_metrics(model, tensor, device)
             if model is not None and tensor is not None
             else None
         ),

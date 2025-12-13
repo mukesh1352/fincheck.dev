@@ -46,3 +46,7 @@ next-env.d.ts
 /app/generated/prisma
 __pycache__/
 *.pyc
+
+# backend generated
+backend/uploads/
+backend/benchmarking/results/

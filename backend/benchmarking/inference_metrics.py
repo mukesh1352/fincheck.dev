@@ -1,7 +1,7 @@
 import time
 import torch
 
-def get_inference_metrics(model, tensor):
+def get_inference_metrics(model, tensor, device="cpu"):
     """
     Computes:
     - Cold inference time
@@ -31,8 +31,18 @@ def get_inference_metrics(model, tensor):
 
     avg_latency = sum(times) / len(times)
 
-    return {
-        "cold_inference_time": cold_time,
-        "warm_inference_time": warm_time,
+    metrics = {
+        "cold_start_latency": cold_time,
+        "warm_start_latency": warm_time,
         "avg_10run_latency": avg_latency,
     }
+
+    # Assign latency to specific device field
+    if str(device) == "cpu":
+        metrics["cpu_inference_time"] = avg_latency
+        metrics["gpu_inference_time"] = 0
+    else:
+        metrics["cpu_inference_time"] = 0
+        metrics["gpu_inference_time"] = avg_latency
+
+    return metrics

@@ -9,10 +9,19 @@ import threading
 import pika
 
 from dotenv import load_dotenv
-load_dotenv()
+import os
+
+# Load .env.local if it exists, otherwise .env
+env_local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env.local")
+if os.path.exists(env_local_path):
+    load_dotenv(env_local_path)
+    print(f"[Backend] Loaded environment from {env_local_path}")
+else:
+    load_dotenv()
+    print("[Backend] Loaded environment from .env")
 
 from backend.msgqueue.connection import get_connection
-from backend.msgqueue.worker1 import start_worker
+from backend.msgqueue.worker1 import start_worker, process_job
 
 
 
@@ -81,8 +90,12 @@ def publish_inference_job(job_id: str, filepath: str):
         conn.close()
 
     except Exception as e:
-        print("[Backend] Error publishing message:", e)
-        raise HTTPException(status_code=500, detail="Message queue error")
+        print(f"[Backend] RabbitMQ Error: {e}")
+        print(f"[Backend] Falling back to direct execution for job {job_id}")
+        
+        # Fallback: Run in background thread without queue
+        t = threading.Thread(target=process_job, args=(job_id, filepath), daemon=True)
+        t.start()
 
 
 # -----------------------------------

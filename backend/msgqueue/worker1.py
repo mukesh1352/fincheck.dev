@@ -48,12 +48,8 @@ def _normalize_filepath(raw_path: str) -> str:
     return os.path.abspath(os.path.join(BASE_DIR, raw_path))
 
 
-def callback(ch, method, properties, body):
-    data = json.loads(body)
-    job_id = data.get("job_id")
-    raw_path = data.get("filepath")
-
-    print(f"[Worker] Received job: {job_id}")
+def process_job(job_id: str, raw_path: str):
+    print(f"[Worker] Processing job: {job_id}")
 
     filepath = _normalize_filepath(raw_path)
     print(f"[Worker] Normalized filepath: {filepath}")
@@ -66,7 +62,6 @@ def callback(ch, method, properties, body):
         metrics["filepath"] = filepath
 
         store_metrics(job_id, metrics)
-        ch.basic_ack(delivery_tag=method.delivery_tag)
         return
 
     try:
@@ -77,7 +72,8 @@ def callback(ch, method, properties, body):
             job_id=job_id,
             model=model,
             tensor=tensor,
-            probabilities=probabilities
+            probabilities=probabilities,
+            device=DEVICE
         )
 
         metrics["prediction_quality"] = get_prediction_quality(probabilities)
@@ -95,8 +91,15 @@ def callback(ch, method, properties, body):
 
         store_metrics(job_id, metrics)
 
-    finally:
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+def callback(ch, method, properties, body):
+    data = json.loads(body)
+    job_id = data.get("job_id")
+    raw_path = data.get("filepath")
+
+    process_job(job_id, raw_path)
+    
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def start_worker():

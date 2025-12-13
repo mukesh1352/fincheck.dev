@@ -9,6 +9,9 @@ import LatencyLive from "../components/charts/LatencyLive";
 import CpuRamBarUsage from "../components/charts/CPURAMUSAGE";
 import ENTROPYCONFIDENCESCORE from "../components/charts/ENTROPYCONFIDENCESCORE";
 import OVERALLMODELPERFORMANCE from "../components/charts/OVERALLMODELPERFORMANCE";
+import ColdWarmUsage from "../components/charts/ColdWarmUsage";
+import LatencyDistributionUsage from "../components/charts/LatencyDistributionUsage";
+import InferenceComparisonUsage from "../components/charts/InferenceComparisonUsage";
 
 export default function DashboardPage() {
   return (
@@ -109,6 +112,29 @@ export default function DashboardPage() {
 
           <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
             <LatencyLive />
+          </div>
+        </section>
+
+        {/* ===================== */}
+        {/* INFERENCE ANALYTICS */}
+        {/* ===================== */}
+        <section className="lg:col-span-2 space-y-6">
+          <h2 className="text-sm font-semibold tracking-wide text-slate-400 uppercase">
+            Inference Analytics
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+              <ColdWarmUsage />
+            </div>
+
+            <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+              <LatencyDistributionUsage />
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-slate-800/60 p-6 border border-slate-700 shadow-lg">
+            <InferenceComparisonUsage />
           </div>
         </section>
 
