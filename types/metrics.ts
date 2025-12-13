@@ -1,30 +1,31 @@
-// types/metrics.ts
-
-export interface InferenceMetrics {
-  avg_10run_latency?: number;
+// -----------------------------
+// Prediction Quality Metrics
+// -----------------------------
+export interface PredictionQuality {
+  entropy?: number;
+  confidence_score?: number;
 }
 
-export interface SystemMetrics {
-  cpu_percent?: number;
-  ram_percent?: number;
-  gpu?: {
-    utilization_percent?: number;
-    memory_used_mb?: number;
-  };
-}
-
+// -----------------------------
+// Root Metric Document
+// -----------------------------
 export interface MetricDocument {
   timestamp: string;
 
-  system_metrics?: SystemMetrics;
-  inference_metrics?: InferenceMetrics;   // ✅ FIXED
+  system_metrics?: {
+    cpu_percent?: number;
+    ram_percent?: number;
+  };
 
-  // dot-notation fallback fields from MongoDB projections
-  "system_metrics.cpu_percent"?: number;
-  "system_metrics.ram_percent"?: number;
-  "system_metrics.gpu.utilization_percent"?: number;
-  "system_metrics.gpu.memory_used_mb"?: number;
+  inference_metrics?: {
+    avg_10run_latency?: number;
+  };
 
-  // dot-notation inference fallback
-  "inference_metrics.avg_10run_latency"?: number; // ✅ FIXED
+  prediction_quality?: PredictionQuality; // ✅ CORRECT LOCATION
+
+  // -----------------------------
+  // MongoDB dot-notation fallbacks
+  // -----------------------------
+  "prediction_quality.entropy"?: number;
+  "prediction_quality.confidence_score"?: number;
 }
