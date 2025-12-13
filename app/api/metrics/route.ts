@@ -101,6 +101,22 @@ export async function GET(req: NextRequest) {
             .toArray()
         );
 
+      case "inference":
+        return NextResponse.json(
+          await col
+            .find(baseMatch, {
+              projection: {
+                timestamp: 1,
+                "inference_metrics.cold_start_latency": 1,
+                "inference_metrics.warm_start_latency": 1,
+                "inference_metrics.cpu_inference_time": 1,
+                "inference_metrics.gpu_inference_time": 1,
+              },
+            })
+            .sort({ timestamp: 1 })
+            .toArray()
+        );
+
       case "errors":
         return NextResponse.json(
           await col
