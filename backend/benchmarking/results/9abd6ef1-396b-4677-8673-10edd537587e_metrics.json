@@ -1,0 +1,26 @@
+{
+  "job_id": "9abd6ef1-396b-4677-8673-10edd537587e",
+  "timestamp": "2025-12-13T09:24:35.118554",
+  "system_metrics": {
+    "cpu_percent": 11.1,
+    "ram_percent": 81.6,
+    "gpu": {
+      "gpu_available": false
+    }
+  },
+  "inference_metrics": {
+    "cold_inference_time": 0.0006849765777587891,
+    "warm_inference_time": 0.0004928112030029297,
+    "avg_10run_latency": 0.0004207849502563477
+  },
+  "model_analysis": {
+    "param_count": 94986,
+    "model_size_mb": 0.36234283447265625,
+    "approx_flops": 189972,
+    "memory_footprint_mb": 0.36234283447265625
+  },
+  "prediction_quality": {
+    "confidence_score": 0.2434273511171341,
+    "entropy": 2.181214813860133
+  }
+}
