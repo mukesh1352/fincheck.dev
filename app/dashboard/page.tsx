@@ -6,6 +6,7 @@ import GpuChart from "../components/charts/GpuChart";
 import GpuVramChart from "../components/charts/GpuVramChart";
 import RamChart from "../components/charts/RamChart";
 import LatencyLive from "../components/charts/LatencyLive";
+import CpuRamBarUsage from "../components/charts/CPURAMUSAGE";
 
 export default function DashboardPage() {
   return (
@@ -21,31 +22,37 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      {/* Grid Container */}
+      {/* Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         {/* Row 1 */}
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
+        <div className="rounded-xl shadow-lg bg-slate-800/60 p-4 border border-slate-700">
           <CpuChart />
         </div>
 
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
+        <div className="rounded-xl shadow-lg bg-slate-800/60 p-4 border border-slate-700">
           <GpuChart />
         </div>
 
         {/* Row 2 */}
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
+        <div className="rounded-xl shadow-lg bg-slate-800/60 p-4 border border-slate-700">
           <GpuVramChart />
         </div>
 
-        <div className="rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
+        <div className="rounded-xl shadow-lg bg-slate-800/60 p-4 border border-slate-700">
           <RamChart />
         </div>
 
-        {/* Full-width Footer Chart */}
-        <div className="lg:col-span-2 rounded-xl shadow-lg bg-slate-800/60 backdrop-blur-md p-4 border border-slate-700">
+        {/* Row 3 – CPU vs RAM BAR */}
+        <div className="rounded-xl shadow-lg bg-slate-800/60 p-4 border border-slate-700">
+          <CpuRamBarUsage />
+        </div>
+
+        {/* Footer */}
+        <div className="lg:col-span-2 rounded-xl shadow-lg bg-slate-800/60 p-4 border border-slate-700">
           <LatencyLive />
         </div>
+
       </div>
     </main>
   );
