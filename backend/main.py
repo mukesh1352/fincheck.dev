@@ -7,6 +7,7 @@ import aiofiles
 import json
 import threading
 import pika
+from backend.benchmarking.store_metrics import load_metrics
 
 from dotenv import load_dotenv
 import os
@@ -137,6 +138,22 @@ async def upload_image(file: UploadFile = File(...)):
         "size": file_size,
         "mime": file.content_type,
     }
+
+@app.get("/jobs/{job_id}")
+def get_job_result(job_id: str):
+    data = load_metrics(job_id)
+
+    if not data:
+        return {
+            "status": "processing"
+        }
+
+    return {
+        "status": "completed",
+        "extracted_number": data.get("extracted_number"),
+        "metrics": data
+    }
+
 
 
 # -----------------------------------

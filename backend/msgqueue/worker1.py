@@ -3,6 +3,7 @@ import json
 import os
 import torch
 import torch.nn.functional as F
+import numpy as np
 from PIL import Image
 from torchvision import transforms
 from backend.msgqueue.connection import get_connection
@@ -11,6 +12,7 @@ from backend.msgqueue.model_registry import get_model
 from backend.benchmarking.metrics_manager import collect_all_metrics
 from backend.benchmarking.store_metrics import store_metrics
 from backend.benchmarking.prediction_quality import get_prediction_quality
+from backend.prediction.preprocess import preprocess_image
 
 
 
@@ -47,6 +49,26 @@ def _normalize_filepath(raw_path: str) -> str:
         return raw_path
     return os.path.abspath(os.path.join(BASE_DIR, raw_path))
 
+def infer_number(image_path, model_name="baseline_mnist.pth"):
+    """
+    Takes an image path, runs preprocessing to extract digits,
+    feeds each digit to the model, and returns the concatenated number as a string.
+    """
+    digits = preprocess_image(image_path)  # List of tensors (1,28,28)
+
+    model = get_model(model_name, DEVICE)
+
+    number = ""
+    model.eval()
+    with torch.no_grad():
+        for digit_tensor in digits:
+            # Add batch dimension: (1,1,28,28)
+            input_tensor = digit_tensor.unsqueeze(0).to(DEVICE)
+            output = model(input_tensor)
+            pred = output.argmax(dim=1).item()
+            number += str(pred)
+
+    return number
 
 def process_job(job_id: str, raw_path: str):
     print(f"[Worker] Processing job: {job_id}")
@@ -77,7 +99,8 @@ def process_job(job_id: str, raw_path: str):
         )
 
         metrics["prediction_quality"] = get_prediction_quality(probabilities)
-
+        extracted_number = infer_number(filepath)
+        metrics["extracted_number"] = extracted_number
         store_metrics(job_id, metrics)
 
         print(f"[Worker] Job {job_id} DONE → Class: {prediction}")
