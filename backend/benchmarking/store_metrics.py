@@ -86,3 +86,35 @@ def store_metrics(job_id, metrics):
     except Exception as e:
         print(f"[MongoDB] FAILED to store metrics: {e}")
 
+def load_metrics(job_id: str):
+    """
+    Load metrics for a job_id.
+    Priority:
+    1. MongoDB
+    2. Local JSON file
+    """
+
+    # ---------- Try MongoDB ----------
+    try:
+        col = get_metrics_collection()
+        doc = col.find_one(
+            {"job_id": job_id},
+            {"_id": 0}  # hide Mongo ObjectId
+        )
+        if doc:
+            return doc
+    except Exception as e:
+        print(f"[MongoDB] load failed for {job_id}: {e}")
+
+    # ---------- Fallback: JSON ----------
+    json_path = os.path.join(METRICS_DIR, f"{job_id}_metrics.json")
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[FILE] load failed for {job_id}: {e}")
+
+    # ---------- Not found ----------
+    return None
+

@@ -5,16 +5,41 @@ import { useState } from "react";
 export default function MainPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [description, setDescription] = useState<string>("");
+  const [accountNumber, setAccountNumber] = useState<string>("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [backendResponse, setBackendResponse] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function pollForResult(jobId: string) {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/jobs/${jobId}`);
+        const data = await res.json();
+
+        if (data.status === "completed") {
+          setBackendResponse(data.extracted_number);
+          setIsSubmitted(true);
+          setIsLoading(false);
+          clearInterval(interval);
+        }
+      } catch {
+        clearInterval(interval);
+        setIsLoading(false);
+        alert("Failed to fetch job result ❌");
+      }
+    }, 1000);
+  }
 
   async function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
 
     if (!selectedFile) return alert("Please select an image ⚠️");
+    if (!accountNumber) return alert("Please enter account number ⚠️");
 
     const formData = new FormData();
     formData.append("file", selectedFile);
-    formData.append("description", description);
+
+    setIsLoading(true);
 
     try {
       const res = await fetch("http://127.0.0.1:8000/upload-image", {
@@ -23,13 +48,15 @@ export default function MainPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) return alert(`Upload failed ❌: ${data.detail}`);
 
-      alert("Uploaded successfully 🎉");
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setDescription("");
+      if (!res.ok) {
+        setIsLoading(false);
+        return alert(`Upload failed ❌: ${data.detail}`);
+      }
+
+      pollForResult(data.job_id);
     } catch {
+      setIsLoading(false);
       alert("Server error, try again later ⚠️");
     }
   }
@@ -38,6 +65,130 @@ export default function MainPage() {
     setSelectedFile(file);
     if (file) setPreviewUrl(URL.createObjectURL(file));
     else setPreviewUrl(null);
+  }
+
+  function handleReset() {
+    setIsSubmitted(false);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setAccountNumber("");
+    setBackendResponse("");
+  }
+
+  const isCorrectPrediction = backendResponse === accountNumber;
+
+  if (isSubmitted) {
+    return (
+      <>
+        <style jsx>{`
+          .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #115e59 50%, #166534 100%);
+            padding: 2.5rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          }
+          .card {
+            width: 100%;
+            max-width: 550px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          }
+          .title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            margin-bottom: 2.5rem;
+          }
+          .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+          }
+          .result-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+          }
+          .result-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+          }
+          .result-value {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+          }
+          .status-box {
+            background: ${isCorrectPrediction
+              ? "rgba(34,197,94,0.15)"
+              : "rgba(239,68,68,0.15)"};
+            border: 2px solid ${isCorrectPrediction
+              ? "rgba(34,197,94,0.4)"
+              : "rgba(239,68,68,0.4)"};
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+          }
+          .status-icon {
+            font-size: 3rem;
+          }
+          .button {
+            width: 100%;
+            padding: 1rem;
+            background: #0d9488;
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+          }
+        `}</style>
+
+        <div className="container">
+          <div className="card">
+            <h1 className="title">Prediction Results</h1>
+
+            <div className="result-grid">
+              <div className="result-card">
+                <div className="result-label">Your Input</div>
+                <div className="result-value">{accountNumber}</div>
+              </div>
+              <div className="result-card">
+                <div className="result-label">Model Prediction</div>
+                <div className="result-value">{backendResponse}</div>
+              </div>
+            </div>
+
+            <div className="status-box">
+              <div className="status-icon">
+                {isCorrectPrediction ? "✅" : "❌"}
+              </div>
+              <div>
+                {isCorrectPrediction
+                  ? "Prediction Successful!"
+                  : "Prediction Mismatch"}
+              </div>
+            </div>
+
+            <button onClick={handleReset} className="button">
+              Submit Another
+            </button>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -195,16 +346,37 @@ export default function MainPage() {
           cursor: pointer;
           transition: all 0.2s ease;
           box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+          position: relative;
         }
 
-        .submit-button:hover {
+        .submit-button:hover:not(:disabled) {
           background: #0f766e;
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
         }
 
-        .submit-button:active {
+        .submit-button:active:not(:disabled) {
           transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .spinner {
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          border: 3px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: white;
+          animation: spin 0.8s linear infinite;
+          margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
 
@@ -215,19 +387,19 @@ export default function MainPage() {
           </h1>
 
           <div className="form-section">
-            <label htmlFor="description" className="label">
+            <label htmlFor="accountNumber" className="label">
               Account Number
             </label>
             <input
-              id="description"
+              id="accountNumber"
               type="text"
               className="text-input"
               placeholder="Enter Account Number"
-              value={description}
+              value={accountNumber}
               onChange={(e) => {
                 const value = e.target.value;
                 if (value === "" || /^\d+$/.test(value)) {
-                  setDescription(value);
+                  setAccountNumber(value);
                 }
               }}
             />
@@ -265,8 +437,10 @@ export default function MainPage() {
             type="button"
             onClick={handleSubmit}
             className="submit-button"
+            disabled={isLoading}
           >
-            Submit Image
+            {isLoading && <span className="spinner"></span>}
+            {isLoading ? 'Processing...' : 'Submit Image'}
           </button>
         </div>
       </div>

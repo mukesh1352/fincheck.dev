@@ -3,13 +3,10 @@
 import os
 import torch
 from backend.msgqueue.worker_models import SmallCNN
-
+from backend.models.mnist_model import MNISTCNN  # import MNISTCNN
 
 # --------------------------------------------
 # Resolve absolute MODEL_DIR correctly
-# backend/
-#   models/
-# --------------------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
 
@@ -17,37 +14,40 @@ print(f"[ModelRegistry] MODEL_DIR = {MODEL_DIR}")
 
 _registry = {}
 
-
 # ---------------------------------------------------------
 # Load a model dynamically based on file extension
 # ---------------------------------------------------------
 def load_model_dynamic(model_path, device):
     ext = os.path.splitext(model_path)[1].lower()
 
-    if ext in [".pth", ".pt"]:
-        print(f"[ModelRegistry] Loading model file: {model_path}")
+    if ext not in [".pth", ".pt"]:
+        raise ValueError(f"Unsupported model type: {ext}")
 
-        model = SmallCNN(num_classes=10)
+    print(f"[ModelRegistry] Loading model file: {model_path}")
 
-        ck = torch.load(model_path, map_location=device)
+    # Select model class based on model name
+    model_name = os.path.basename(model_path)
+    if model_name.lower() == "baseline_mnist.pth":
+        model = MNISTCNN()  # use MNISTCNN
+    else:
+        model = SmallCNN(num_classes=10)  # default SmallCNN
 
-        # Handle checkpoint formats
-        if isinstance(ck, dict) and "student_state" in ck:
-            ck = ck["student_state"]
+    ck = torch.load(model_path, map_location=device)
 
-        try:
-            model.load_state_dict(ck)
-        except Exception:
-            # Sometimes state_dict keys are prefixed with "module."
-            ck = {k.replace("module.", ""): v for k, v in ck.items()}
-            model.load_state_dict(ck)
+    # Handle checkpoint formats
+    if isinstance(ck, dict) and "student_state" in ck:
+        ck = ck["student_state"]
 
-        model.to(device)
-        model.eval()
-        return model
+    try:
+        model.load_state_dict(ck)
+    except Exception:
+        # Sometimes state_dict keys are prefixed with "module."
+        ck = {k.replace("module.", ""): v for k, v in ck.items()}
+        model.load_state_dict(ck)
 
-    raise ValueError(f"Unsupported model type: {ext}")
-
+    model.to(device)
+    model.eval()
+    return model
 
 # ---------------------------------------------------------
 # Lazy-load models and reuse them
@@ -58,21 +58,16 @@ def get_model(model_name, device):
     Supports multiple different .pth files.
     """
     if model_name not in _registry:
-
         model_path = os.path.join(MODEL_DIR, model_name)
         print(f"[ModelRegistry] Expected model path: {model_path}")
 
         if not os.path.exists(model_path):
-            raise FileNotFoundError(
-                f"Model {model_name} not found in {MODEL_DIR}"
-            )
+            raise FileNotFoundError(f"Model {model_name} not found in {MODEL_DIR}")
 
         _registry[model_name] = load_model_dynamic(model_path, device)
-
         print(f"[ModelRegistry] Model '{model_name}' loaded and cached.")
 
     return _registry[model_name]
-
 
 # ---------------------------------------------------------
 # List available models from backend/models/
